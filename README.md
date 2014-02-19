@@ -3,18 +3,18 @@ gochat-mqtt
 
 A simple chat program to demonstrate [MQTT](http://mqtt.org) with Go, using the [Eclipse Paho](http://eclipse.org/paho) Go client
 
-*build*
+**Build**
 
-(requires Go, obviously...)
+Requires Go, obviously...
 
-Set `GOPATH` and `GOBIN` variables
+Set the `GOPATH` and `GOBIN` variables appropriately, then...
 
 ```
 $ go get git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git
 $ go install mqttchat.go
 ```
 
-*run*
+**Run**
 
 ```
 $ ./bin/mqttchat --help
