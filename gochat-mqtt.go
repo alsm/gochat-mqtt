@@ -17,7 +17,7 @@ func main() {
 	stdin := bufio.NewReader(os.Stdin)
 	rand.Seed(time.Now().Unix())
 
-	server := flag.String("server", "tcp://test.mosquitto.org:1883", "The MQTT server to connect to")
+	server := flag.String("server", "tcp://iot.eclipse.org:1883", "The MQTT server to connect to")
 	room := flag.String("room", "gochat", "The chat room to enter. default 'gochat'")
 	name := flag.String("name", "user"+strconv.Itoa(rand.Intn(1000)), "Username to be displayed")
 	flag.Parse()
