@@ -24,20 +24,19 @@ func main() {
 
 	opts := MQTT.NewClientOptions().AddBroker(*server).SetClientId(*name).SetCleanSession(true)
 	client := MQTT.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+	_, err := client.Start()
+	if err != nil {
+		panic(err)
 	} else {
 		fmt.Printf("Connected as %s to %s\n", *name, *server)
 	}
 
 	sub_topic := strings.Join([]string{"/gochat/", *room, "/+"}, "")
-	if token := client.Subscribe(sub_topic, 1,
-		func(client *MQTT.MqttClient, msg MQTT.Message) {
-			msg_from := strings.Split(msg.Topic(), "/")[3]
-			fmt.Println(msg_from + ": " + string(msg.Payload()))
-		}); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
+	filter, _ := MQTT.NewTopicFilter(sub_topic, 1)
+	client.StartSubscription(func(client *MQTT.MqttClient, msg MQTT.Message) {
+		msg_from := strings.Split(msg.Topic(), "/")[3]
+		fmt.Println(msg_from + ": " + string(msg.Payload()))
+	}, filter)
 
 	pub_topic := strings.Join([]string{"/gochat/", *room, "/", *name}, "")
 
@@ -46,6 +45,7 @@ func main() {
 		if err == io.EOF {
 			os.Exit(0)
 		}
-		client.Publish(pub_topic, 1, false, strings.TrimSpace(message)).Wait()
+		r := client.Publish(MQTT.QOS_ONE, pub_topic, strings.TrimSpace(message))
+		<-r
 	}
 }
