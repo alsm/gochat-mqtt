@@ -22,7 +22,7 @@ func main() {
 	name := flag.String("name", "user"+strconv.Itoa(rand.Intn(1000)), "Username to be displayed")
 	flag.Parse()
 
-	opts := MQTT.NewClientOptions().SetBroker(*server).SetClientId(*name).SetCleanSession(true).SetTraceLevel(MQTT.Off)
+	opts := MQTT.NewClientOptions().AddBroker(*server).SetClientId(*name).SetCleanSession(true)
 	client := MQTT.NewClient(opts)
 	_, err := client.Start()
 	if err != nil {
@@ -31,10 +31,12 @@ func main() {
 		fmt.Printf("Connected as %s to %s\n", *name, *server)
 	}
 
-	client.StartSubscription(func(msg MQTT.Message) {
+	sub_topic := strings.Join([]string{"/gochat/", *room, "/+"}, "")
+	filter, _ := MQTT.NewTopicFilter(sub_topic, 1)
+	client.StartSubscription(func(client *MQTT.MqttClient, msg MQTT.Message) {
 		msg_from := strings.Split(msg.Topic(), "/")[3]
 		fmt.Println(msg_from + ": " + string(msg.Payload()))
-	}, "/gochat/"+*room+"/+", MQTT.QOS_ONE)
+	}, filter)
 
 	pub_topic := strings.Join([]string{"/gochat/", *room, "/", *name}, "")
 
