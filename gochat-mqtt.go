@@ -13,6 +13,12 @@ import (
 	"time"
 )
 
+func messageReceived(client *MQTT.Client, msg MQTT.Message) {
+	topics := strings.Split(msg.Topic(), "/")
+	msgFrom := topics[len(topics)-1]
+	fmt.Print(msgFrom + ": " + string(msg.Payload()))
+}
+
 func main() {
 	stdin := bufio.NewReader(os.Stdin)
 	rand.Seed(time.Now().Unix())
@@ -22,30 +28,31 @@ func main() {
 	name := flag.String("name", "user"+strconv.Itoa(rand.Intn(1000)), "Username to be displayed")
 	flag.Parse()
 
-	opts := MQTT.NewClientOptions().AddBroker(*server).SetClientId(*name).SetCleanSession(true)
-	client := MQTT.NewClient(opts)
-	_, err := client.Start()
-	if err != nil {
-		panic(err)
-	} else {
-		fmt.Printf("Connected as %s to %s\n", *name, *server)
+	subTopic := strings.Join([]string{"/gochat/", *room, "/+"}, "")
+	pubTopic := strings.Join([]string{"/gochat/", *room, "/", *name}, "")
+
+	opts := MQTT.NewClientOptions().AddBroker(*server).SetClientID(*name).SetCleanSession(true)
+
+	opts.OnConnect = func(c *MQTT.Client) {
+		if token := c.Subscribe(subTopic, 1, messageReceived); token.Wait() && token.Error() != nil {
+			panic(token.Error())
+		}
 	}
 
-	sub_topic := strings.Join([]string{"/gochat/", *room, "/+"}, "")
-	filter, _ := MQTT.NewTopicFilter(sub_topic, 1)
-	client.StartSubscription(func(client *MQTT.MqttClient, msg MQTT.Message) {
-		msg_from := strings.Split(msg.Topic(), "/")[3]
-		fmt.Println(msg_from + ": " + string(msg.Payload()))
-	}, filter)
+	client := MQTT.NewClient(opts)
 
-	pub_topic := strings.Join([]string{"/gochat/", *room, "/", *name}, "")
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+	fmt.Printf("Connected as %s to %s\n", *name, *server)
 
 	for {
 		message, err := stdin.ReadString('\n')
 		if err == io.EOF {
 			os.Exit(0)
 		}
-		r := client.Publish(MQTT.QOS_ONE, pub_topic, strings.TrimSpace(message))
-		<-r
+		if token := client.Publish(pubTopic, 1, false, message); token.Wait() && token.Error() != nil {
+			fmt.Println("Failed to send message")
+		}
 	}
 }
