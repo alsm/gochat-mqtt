@@ -11,14 +11,14 @@ Set the `GOPATH` and `GOBIN` variables appropriately, then...
 
 ```
 $ go get git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git
-$ go install mqttchat.go
+$ go install gochat-mqtt.go
 ```
 
 **Run**
 
 ```
-$ ./bin/mqttchat --help
-Usage of ./bin/mqttchat:
+$ gochat-mqtt --help
+Usage of gochat-mqtt:
   -name="user201": Username to be displayed
   -room="gochat": The chat room to enter. default 'gochat'
   -server="tcp://iot.eclipse.org:1883": The MQTT server to connect to
